@@ -80,6 +80,7 @@ public:
         sp<ProcessState> proc = ProcessState::self();
         if (proc->supportsProcesses()) {
             LOGV("App process: starting thread pool.\n");
+            // 启动一个 Binder 线程池，以便应用程序进程可以通过 Binder 进程间通信机制来和其它进程通信
             proc->startThreadPool();
         }       
     }

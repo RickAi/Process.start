@@ -170,6 +170,7 @@ class ZygoteConnection {
         FileDescriptor[] descriptors;
 
         try {
+            // 读取启动参数
             args = readArgumentList();
             descriptors = mSocket.getAncillaryFileDescriptors();
         } catch (IOException ex) {
@@ -195,6 +196,7 @@ class ZygoteConnection {
         int pid;
 
         try {
+            // 将 String 数组封装成 Arguments
             parsedArgs = new Arguments(args);
 
             applyUidSecurityPolicy(parsedArgs, peer);
@@ -208,6 +210,9 @@ class ZygoteConnection {
                 rlimits = parsedArgs.rlimits.toArray(intArray2d);
             }
 
+            // fork 操作
+            // 将会有两个进程从这里返回
+            // PID=0意味着是子进程
             pid = Zygote.forkAndSpecialize(parsedArgs.uid, parsedArgs.gid,
                     parsedArgs.gids, parsedArgs.debugFlags, rlimits);
         } catch (IllegalArgumentException ex) {
@@ -221,6 +226,7 @@ class ZygoteConnection {
 
         if (pid == 0) {
             // in child
+            // 创建出的新进程
             handleChildProc(parsedArgs, descriptors, newStderr);
             // should never happen
             return true;
@@ -711,6 +717,7 @@ class ZygoteConnection {
         }
 
         if (parsedArgs.runtimeInit) {
+            // 在新创建的应用程序进程中初始化运行时库，创建一个 Binder 线程池
             RuntimeInit.zygoteInit(parsedArgs.remainingArgs);
         } else {
             ClassLoader cloader;
@@ -785,6 +792,7 @@ class ZygoteConnection {
         }
 
         try {
+            // 在这里通过 Socket 通知对端进程已经创建成功，并返回 PID
             mSocketOutStream.writeInt(pid);
         } catch (IOException ex) {
             Log.e(TAG, "Error reading from command socket", ex);

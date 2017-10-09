@@ -190,6 +190,7 @@ static void com_android_internal_os_RuntimeInit_finishInit(JNIEnv* env, jobject 
 
 static void com_android_internal_os_RuntimeInit_zygoteInit(JNIEnv* env, jobject clazz)
 {
+    // AppRuntime 在构造器中被创建，是 AndroidRuntime 的子类
     gCurRuntime->onZygoteInit();
 }
 

@@ -154,6 +154,7 @@ void ProcessState::startThreadPool()
     AutoMutex _l(mLock);
     if (!mThreadPoolStarted) {
         mThreadPoolStarted = true;
+        // 线程池启动之后就可以支持 Binder 进程间通信了，只需要将它启动起来注册到 ServiceManager中
         spawnPooledThread(true);
     }
 }

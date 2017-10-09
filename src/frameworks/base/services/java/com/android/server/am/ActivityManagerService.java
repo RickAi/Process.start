@@ -1789,7 +1789,9 @@ public final class ActivityManagerService extends ActivityManagerNative
         }
         
         if (app == null) {
+            // 创建新的 ProcessRecord
             app = newProcessRecordLocked(null, info, processName);
+            // 放入 mProcessNames Map
             mProcessNames.put(processName, info.uid, app);
         } else {
             // If this is a new package in the process, add the package to the list
@@ -1836,6 +1838,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         mProcDeaths[0] = 0;
         
         try {
+            // 获得创建的应用程序进程的用户 ID,用户组 ID
             int uid = app.info.uid;
             int[] gids = null;
             try {
@@ -1871,6 +1874,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             if ("1".equals(SystemProperties.get("debug.assert"))) {
                 debugFlags |= Zygote.DEBUG_ENABLE_ASSERT;
             }
+            // 创建进程，并制定这个进程的路口时 ActivityThread 的静态方法 main
             int pid = Process.start("android.app.ActivityThread",
                     mSimpleProcessManagement ? app.processName : null, uid, uid,
                     gids, debugFlags, null);

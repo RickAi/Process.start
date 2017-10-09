@@ -126,6 +126,7 @@ public class RuntimeInit {
         /*
          * Sets the default HTTP User-Agent used by HttpURLConnection.
          */
+        // http.agent 初始化信息
         String userAgent = getDefaultUserAgent();
         System.setProperty("http.agent", userAgent);
 
@@ -259,8 +260,10 @@ public class RuntimeInit {
         System.setOut(new AndroidPrintStream(Log.INFO, "System.out"));
         System.setErr(new AndroidPrintStream(Log.WARN, "System.err"));
 
+        // 设置新创建的应用进程的时区和键盘布局等通用信息
         commonInit();
 	
+        // 启动一个 Binder 线程池
         zygoteInitNative();
 
         int curArg = 0;
@@ -291,6 +294,7 @@ public class RuntimeInit {
 
         System.arraycopy(argv, curArg, startArgs, 0, startArgs.length);
 
+        // 通过反射调用 ActivityThread 的静态 main 方法
         invokeStaticMain(startClass, startArgs);
     }
 

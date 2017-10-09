@@ -557,6 +557,7 @@ public class ZygoteInit {
             // Start profiling the zygote initialization.
             SamplingProfilerIntegration.start();
 
+            // 在 Zygote 服务端注册一个 Socket Server, 用来创建新进程
             registerZygoteSocket();
             EventLog.writeEvent(LOG_BOOT_PROGRESS_PRELOAD_START,
                 SystemClock.uptimeMillis());
@@ -588,11 +589,14 @@ public class ZygoteInit {
             if (ZYGOTE_FORK_MODE) {
                 runForkMode();
             } else {
+                // 开始处理进程创建的 Socket 请求
                 runSelectLoopMode();
             }
 
             closeServerSocket();
         } catch (MethodAndArgsCaller caller) {
+            // ActivityThread 的静态方法在这被回调执行
+            // 这里间接调用方法，巧妙的利用了异常处理机制来清理前面的调用栈
             caller.run();
         } catch (RuntimeException ex) {
             Log.e(TAG, "Zygote died with exception", ex);
@@ -686,11 +690,13 @@ public class ZygoteInit {
             if (index < 0) {
                 throw new RuntimeException("Error in select()");
             } else if (index == 0) {
+                // 新的进程创建请求
                 ZygoteConnection newPeer = acceptCommandPeer();
                 peers.add(newPeer);
                 fds.add(newPeer.getFileDesciptor());
             } else {
                 boolean done;
+                // 处理这个进程请求
                 done = peers.get(index).runOnce();
 
                 if (done) {
@@ -835,6 +841,7 @@ public class ZygoteInit {
 
         public void run() {
             try {
+                // 触发 ActivityThread.main 方法
                 mMethod.invoke(null, new Object[] { mArgs });
             } catch (IllegalAccessException ex) {
                 throw new RuntimeException(ex);

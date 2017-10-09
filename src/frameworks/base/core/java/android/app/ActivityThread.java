@@ -3667,11 +3667,14 @@ public final class ActivityThread {
 
         Process.setArgV0("<pre-initialized>");
 
+        // 创建主线程消息循环
+        // 每一个应用程序启动完成之后都会自动的进行这个消息循环
         Looper.prepareMainLooper();
         if (sMainThreadHandler == null) {
             sMainThreadHandler = new Handler();
         }
 
+        // 创建 ActivityThread 实例
         ActivityThread thread = new ActivityThread();
         thread.attach(false);
 

@@ -269,8 +269,10 @@ public class Process {
                                   int debugFlags,
                                   String[] zygoteArgs)
     {
+        // 是否支持 Binder 进程间通信的机制
         if (supportsProcesses()) {
             try {
+                // 如果支持, 就请求 Zygote 来创建一个应用程序进程
                 return startViaZygote(processClass, niceName, uid, gid, gids,
                         debugFlags, zygoteArgs);
             } catch (ZygoteStartFailedEx ex) {
@@ -281,7 +283,7 @@ public class Process {
             }
         } else {
             // Running in single-process mode
-            
+            // 如果不支持, 就使用一个线程来模拟进程
             Runnable runnable = new Runnable() {
                         public void run() {
                             Process.invokeStaticMain(processClass);
@@ -377,9 +379,12 @@ public class Process {
             try {
                 sZygoteSocket = new LocalSocket();
 
+                // Zygote 启动时会创建一个名为 zygote 的 Socket
+                // 与这个 Socket 建立连接，连接的过程中，会在/dev/socket目录下找到对应的 zygote 文件
                 sZygoteSocket.connect(new LocalSocketAddress(ZYGOTE_SOCKET, 
                         LocalSocketAddress.Namespace.RESERVED));
 
+                // 连接成功后获取输入输出流, 访问通信
                 sZygoteInputStream
                         = new DataInputStream(sZygoteSocket.getInputStream());
 
@@ -425,6 +430,7 @@ public class Process {
             throws ZygoteStartFailedEx {
         int pid;
 
+        // 创建一个连接到 Zygote 的 LocalSocket 对象
         openZygoteSocketIfNeeded();
 
         try {
@@ -437,7 +443,7 @@ public class Process {
              * After the zygote process reads these it will write the pid of
              * the child or -1 on failure.
              */
-
+            // 将要创建的应用程序的进程启动参数传到 LocalSocket 对象中
             sZygoteWriter.write(Integer.toString(args.size()));
             sZygoteWriter.newLine();
 
@@ -455,6 +461,9 @@ public class Process {
             sZygoteWriter.flush();
 
             // Should there be a timeout on this?
+            // 通过 Socket 读取 Zygote 创建成功的进程 PID
+            // Socket 对端的请求在 ZygoteInit.runSelectLoopMode中进行处理
+            // 读取成功之后会对 PID 进行检查，无异常的话就会推出
             pid = sZygoteInputStream.readInt();
 
             if (pid < 0) {
@@ -502,10 +511,12 @@ public class Process {
         int pid;
 
         synchronized(Process.class) {
+            // 初始化进程的启动参数列表
             ArrayList<String> argsForZygote = new ArrayList<String>();
 
             // --runtime-init, --setuid=, --setgid=,
             // and --setgroups= must go first
+            // --runtime-init 表示初始化运行时库，启动一个 Binder 线程池
             argsForZygote.add("--runtime-init");
             argsForZygote.add("--setuid=" + uid);
             argsForZygote.add("--setgid=" + gid);
@@ -553,6 +564,7 @@ public class Process {
                 }
             }
             
+            // 初始化完毕
             pid = zygoteSendArgsAndGetPid(argsForZygote);
         }
 
